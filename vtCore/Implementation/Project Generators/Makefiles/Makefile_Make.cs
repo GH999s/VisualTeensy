@@ -101,6 +101,7 @@ namespace vtCore
             mf.Append("S_FLAGS     := $(FLAGS_CPU) $(FLAGS_OPT) $(FLAGS_COM) $(DEFINES) $(FLAGS_S)\n");
             mf.Append("LD_FLAGS    := $(FLAGS_CPU) $(FLAGS_OPT) $(FLAGS_LSP) $(FLAGS_LD)\n");
             mf.Append("AR_FLAGS    := rcs\n");
+            mf.Append("NM_FLAGS    := --numeric-sort --defined-only --demangle --print-size\n");
 
             if (cfg.setupType == SetupTypes.expert && !String.IsNullOrWhiteSpace(cfg.makefileExtension))
             {
@@ -156,6 +157,7 @@ namespace vtCore
             mf.Append("TARGET_HEX      := $(BIN)/$(TARGET_NAME).hex\n");
             mf.Append("TARGET_ELF      := $(BIN)/$(TARGET_NAME).elf\n");
             mf.Append("TARGET_LST      := $(BIN)/$(TARGET_NAME).lst\n");
+            mf.Append("TARGET_SYM      := $(BIN)/$(TARGET_NAME).sym\n");
 
             mf.Append("\n");
             mf.Append("#******************************************************************************\n");
@@ -164,6 +166,7 @@ namespace vtCore
             mf.Append("CC              := $(GCC_BASE)/arm-none-eabi-gcc\n");
             mf.Append("CXX             := $(GCC_BASE)/arm-none-eabi-g++\n");
             mf.Append("AR              := $(GCC_BASE)/arm-none-eabi-gcc-ar\n");
+            mf.Append("NM              := $(GCC_BASE)/arm-none-eabi-gcc-nm\n");
             mf.Append("SIZE            := $(GCC_BASE)/arm-none-eabi-size\n");
             mf.Append("OBJDUMP         := $(GCC_BASE)/arm-none-eabi-objdump\n");
             mf.Append("OBJCOPY         := $(GCC_BASE)/arm-none-eabi-objcopy\n");
@@ -247,7 +250,7 @@ namespace vtCore
             mf.Append(".PHONY: directories all rebuild upload uploadTy uploadCLI clean cleanUser cleanCore\n");
 
             mf.Append("\n");
-            mf.Append("all:  $(TARGET_LST) $(TARGET_HEX)\n");
+            mf.Append("all:  $(TARGET_LST) $(TARGET_SYM) $(TARGET_HEX)\n");
 
             mf.Append("\n");
             mf.Append("rebuild: cleanUser all\n");
@@ -360,10 +363,14 @@ namespace vtCore
 
             mf.Append("\n");
             mf.Append("%.lst: %.elf\n");
-            mf.Append("\t@echo $(COL_LINK)\n");
-            mf.Append("\t@echo [LST] $@ $(COL_ERR)\n");
-            mf.Append("\t@$(OBJDUMP) -d -S --demangle --no-show-raw-insn --syms \"$<\" > \"$@\"\n");
+            mf.Append("\t@echo [LST] $@\n");
+            mf.Append("\t@$(OBJDUMP) -d -S --demangle --no-show-raw-insn \"$<\" > \"$@\"\n");
             mf.Append("\t@echo $(COL_OK)Sucessfully built project$(COL_RESET) &&echo.\n");
+
+            mf.Append("\n");
+            mf.Append("%.sym: %.elf\n");
+            mf.Append("\t@echo [SYM] $@\n");
+            mf.Append("\t@$(NM) $(NM_FLAGS) \"$<\" > \"$@\"\n");
 
             mf.Append("\n");
             mf.Append("%.hex: %.elf\n");
