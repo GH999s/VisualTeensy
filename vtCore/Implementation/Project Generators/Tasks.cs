@@ -354,6 +354,8 @@ namespace vtCore
             jLinkUplFile = new FileInfo(Path.Combine(project.path, ".vsteensy", "flash.jlink"));
             jLinkUPlScrCnt = JLinkUploadScript.generate(project, setup);
 
+            libBase = new Uri(project.libBase);
+
             done = false;
         }
 
@@ -362,6 +364,24 @@ namespace vtCore
             File.WriteAllText(launchJsonFile.FullName, launchJsonContent);
             File.WriteAllText(jLinkUplFile.FullName, jLinkUPlScrCnt);
             done = true;
+
+            var lib = new Library();
+            //lib.sourceUri = new Uri("https://raw.githubusercontent.com/luni64/TeensyDebug/master/library.properties");
+            lib.name = "TeensyDebug";
+            lib.sourceUri = new Uri("https://github.com/luni64/TeensyDebug/archive/master.zip");
+            var plib = ProjectLibrary.cloneFromLib(lib);
+            plib.targetUri = new Uri(libBase,$"lib/{plib.name}");
+            
+
+
+            var lb = new DirectoryInfo(libBase.LocalPath);
+            await Helpers.downloadLibrary(plib, lb);
+
+
+
+
+            //  Helpers.copyFilesRecursively(library.sourceUri, library.targetUri);
+
             await Task.CompletedTask;
         };
 
@@ -369,5 +389,6 @@ namespace vtCore
         private readonly FileInfo jLinkUplFile;
         private readonly string launchJsonContent;
         private readonly string jLinkUPlScrCnt;
+        private readonly Uri libBase;
     }
 }

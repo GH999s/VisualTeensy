@@ -135,6 +135,7 @@ namespace VisualTeensy
 
             // create applicaton folder <user>\AppData\Local\VisualTeensy (if not yet existing)
             Directory.CreateDirectory(SetupData.vtAppFolder);
+            Directory.CreateDirectory(SetupData.libCacheFolder);
 
             // setup logger, log into application folder
             log4net.Config.XmlConfigurator.Configure();
@@ -152,8 +153,6 @@ namespace VisualTeensy
 
             try
             {
-
-
 
                 var setup = loadSetup();
                 if (setup.errors.Count > 0)
@@ -175,6 +174,19 @@ namespace VisualTeensy
                 else
                 {
                     project.newProject();
+                }
+
+                var lib = Helpers.downloadGitHubLibProps("luni64", "TeensyDebug").Result;
+                var lb = new DirectoryInfo(libBase.LocalPath);
+                await Helpers.downloadLibrary(plib, lb);
+
+
+
+                if (project.selectedConfiguration.localLibs.FirstOrDefault(l => l.name == lib.name) == null)
+                {
+                    var pl = ProjectLibrary.cloneFromLib(lib);
+                    pl.targetUri = new Uri(Path.Combine(SetupData.libCacheFolder, lib.name.Replace(' ', '_')));
+                    project.selectedConfiguration.localLibs.Add(pl);
                 }
 
                 var mainVM = new MainVM(project, libManager, setup);

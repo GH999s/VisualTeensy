@@ -19,29 +19,16 @@ namespace vtCore
             {
                 version = "0.2.0",
                 configurations = new[]
-                {
+                {                  
                   new
                   {
-                      name = "Cortex Debug - ATTACH",
-                      cwd = "${workspaceRoot}",
-                      executable = ".vsteensy/build/" + project.cleanName +".elf",
-                      request = "attach",
-                      type = "cortex-debug",
-                      servertype = "jlink",
-                      device = target,
-                      svdFile = svd,
-                      armToolchainPath = cfg.compiler,
-                  },
-                  new
-                  {
-                      name = "Cortex Debug - LAUNCH",
+                      name = "Teensy Debug - LAUNCH",
                       cwd = "${workspaceRoot}",
                       executable = ".vsteensy/build/" + project.cleanName +".elf",
                       request = "launch",
-                      type = "cortex-debug",
+                      type = "gdb",
                       servertype = "jlink",
-                      device = target,
-                      svdFile= svd,
+                      device = target,                    
                       armToolchainPath= cfg.compiler,
                   },
                 }

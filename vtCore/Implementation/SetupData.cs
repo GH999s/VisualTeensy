@@ -16,6 +16,7 @@ namespace vtCore
 
         // app folder
         static public string vtAppFolder { get; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "lunOptics", "VisualTeensy");
+        static public string libCacheFolder { get; } = Path.Combine(vtAppFolder, "libraryCache");
 
         // uploaders
         public CheckedPath uplPjrcBase { get; } = new CheckedPath("teensy.exe");             // upload PJRC

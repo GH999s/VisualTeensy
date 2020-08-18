@@ -240,10 +240,11 @@ namespace vtCore
             {
                 try
                 {
+
                     WebClient client = new WebClient();
                     await client.DownloadFileTaskAsync(source, target);
                 }
-                catch
+                catch (Exception e)
                 {
                     log.Error($"Error downloading index file {source}");
                 }
@@ -256,7 +257,7 @@ namespace vtCore
                 //    await stream.CopyToAsync(fileStream);
                 //}
 
-               
+
 
 
                 //var response = await client.GetAsync(source);
@@ -284,10 +285,57 @@ namespace vtCore
                 log.Error($"Error downloading {target}");
             }
         }
+        
+        public async static Task<ILibrary> downloadGitHubLibProps(string user, string repo)
+        {        
+            using (HttpClient client = new HttpClient())
+            {              
+                var libPropSource = new Uri($"https://raw.githubusercontent.com/{user}/{repo}/master/library.properties");
+                var libZipSource = new Uri($"https://github.com/{user}/{repo}/archive/master.zip");
+                var libPropString = await client.GetStringAsync(libPropSource).ConfigureAwait(false);
+                var libProperties = parseLibraryProperties(libPropString);
+
+                var lib = new Library()
+                {
+                    name = libProperties.ContainsKey("name") ? libProperties["name"] : "",
+                    version = libProperties.ContainsKey("version") ? libProperties["version"] : "",
+                    architectures = new List<string>(),
+                    author = libProperties.ContainsKey("author") ? libProperties["author"] : "",
+                    maintainer = libProperties.ContainsKey("maintainer") ? libProperties["maintainer"] : "",
+                    sentence = libProperties.ContainsKey("sentence") ? libProperties["sentence"] : "",
+                    paragraph = libProperties.ContainsKey("paragraph") ? libProperties["paragraph"] : "",
+                    category = libProperties.ContainsKey("category") ? libProperties["category"] : "",
+                    website = libProperties.ContainsKey("url") ? libProperties["url"] : "",
+                    sourceUri = libZipSource,
+                };
+                return lib;
+            }
+        }
+
+        public static Dictionary<string, string> parseLibraryProperties(string props)
+        {
+            var result = new Dictionary<string, string>();
+
+            var lines = props.Split('\n');
+            foreach (var line in lines)
+            {
+                var eqPos = line.IndexOf('=');
+                if (eqPos < 1) continue;
+
+                string key = line.Substring(0, eqPos).Trim().ToLower();
+                string val = line.Substring(eqPos + 1);
+
+                result.Add(key, val);
+            }
+
+            return result;
+        }
 
 
         public async static Task downloadLibrary(IProjectLibrary lib, DirectoryInfo libBase)
         {
+
+
             if (!libBase.Exists) libBase.Create();
 
             var libDir = new DirectoryInfo(lib.targetUri.LocalPath);
@@ -301,7 +349,7 @@ namespace vtCore
             {
                 Console.Write($"Read {lib.name}... ");
 
-                using (var response = await client.GetAsync(lib.sourceUri))
+                using (var response = await client.GetAsync(lib.sourceUri).ConfigureAwait(false))
                 {
                     response.EnsureSuccessStatusCode();
 
